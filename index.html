@@ -324,7 +324,11 @@ Always return object with 'data' and 'layout' properties.`;
                     console.log(fixedCode);
                     
                     const plotConfig = new Function(fixedCode)();
-                    Plotly.newPlot(plotId, plotConfig.data, plotConfig.layout || {});
+                    Plotly.newPlot(plotId, plotConfig.data, plotConfig.layout || {}, {
+                            displayModeBar: false,
+                            staticPlot: true
+                        });
+
                 } catch (err) {
                     console.error('Plotly error:', err);
                     plotDiv.innerHTML = `<div style="color:red;">Error: ${err.message}</div>`;
