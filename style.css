@@ -254,14 +254,44 @@ body {
     color: #e4e4e4;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
+    body {
+        padding: 0;
+    }
+
     .container {
         height: 100vh;
+        max-height: 100vh;  /* ← DODAJ */
         border-radius: 0;
     }
 
     .message-content {
         max-width: 90%;
+    }
+
+    #input {
+        font-size: 16px;
+    }
+
+    .controls {
+        font-size: 12px;
+    }
+
+    .btn-secondary {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+
+    .header {
+        padding: 10px;
+    }
+
+    .header h1 {
+        font-size: 18px;
+        margin-bottom: 2px;
+    }
+
+    .header p {
+        font-size: 12px;
     }
 }
