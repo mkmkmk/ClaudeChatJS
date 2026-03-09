@@ -81,21 +81,29 @@ Always follow these rules:
 2. Use display mode for standalone equations, complex formulas, or mathematical structures like matrices
 3. When explaining mathematical components, always use inline mode for each symbol
 
-When user asks for a plot/chart/graph, generate code in this format:
-\`\`\`plotly
-{
-  "data": [{
-    "x": [1, 2, 3, 4],
-    "y": [10, 15, 13, 17],
-    "type": "scatter"
-  }],
-  "layout": {
-    "title": "My Chart"
-  }
-}
-\`\`\`
-Use Plotly.js JSON format. Available types: scatter, bar, pie, line, etc.`;
+When user asks for a plot, generate JavaScript code in this format:
+\`\`\`plotly-js
+const x = Array.from({length: 100}, (_, i) => i * 2 * Math.PI / 100);
+const y = x.map(val => Math.sin(val));
 
+return {
+  data: [{
+    x: x, 
+    y: y, 
+    type: 'scatter', 
+    mode: 'lines',
+    name: 'sin(x)'
+  }],
+  layout: {
+    title: 'Sine Function',
+    xaxis: {title: 'x'},
+    yaxis: {title: 'sin(x)'}
+  }
+};
+\`\`\`
+
+Use JavaScript Math functions: Math.sin(), Math.cos(), Math.sqrt(), Math.pow(), etc.
+Always return object with 'data' and 'layout' properties.`;
 
 
         let isProcessing = false;
@@ -172,24 +180,37 @@ Use Plotly.js JSON format. Available types: scatter, bar, pie, line, etc.`;
         }
 
         function renderPlotlyCharts(content) {
-            const plotlyRegex = /```plotly\n([\s\S]*?)```/g;
+            const plotlyRegex = /```plotly-js\n([\s\S]*?)```/g;
             let match;
             let modifiedContent = content;
             
             while ((match = plotlyRegex.exec(content)) !== null) {
                 try {
-                    const plotData = JSON.parse(match[1]);
+                    const code = match[1];
                     const plotId = 'plot-' + Date.now() + Math.random();
                     const plotDiv = `<div id="${plotId}" style="width:100%;height:400px;"></div>`;
                     
                     modifiedContent = modifiedContent.replace(match[0], plotDiv);
                     
-                    // Render po dodaniu do DOM
                     setTimeout(() => {
-                        Plotly.newPlot(plotId, plotData.data, plotData.layout || {});
+                        console.log('=== Plotly Code ===');
+                        console.log(code);
+                        console.log('==================');
+                        const plotConfig = new Function(code)();
+                        Plotly.newPlot(plotId, plotConfig.data, plotConfig.layout || {});
+
+                        if(false)
+                        {
+                            console.log('=== Plot Config ===');
+                            console.log(plotConfig);
+                            console.log('==================');
+                        }
                     }, 100);
+
                 } catch (e) {
                     console.error('Plotly render error:', e);
+                    modifiedContent = modifiedContent.replace(match[0], 
+                        `<div style="color:red;">Error rendering plot: ${e.message}</div>`);
                 }
             }
             
