@@ -460,6 +460,15 @@ Always return object with 'data' and 'layout' properties.`;
         setTimeout(() => {
             addMessage('assistant', 'Cześć! Jestem Claude. W czym mogę pomóc?');
         }, 500);
+
+        window.addEventListener('beforeunload', (e) => {
+            if (chatHistory.length > 0) {
+                e.preventDefault();
+                e.returnValue = ''; // Chrome wymaga tego
+                return ''; // Inne przeglądarki
+            }
+        });
+
     </script>
 </body>
 </html>
