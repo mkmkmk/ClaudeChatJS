@@ -12,6 +12,7 @@ body {
     justify-content: center;
     align-items: center;
     padding: 20px;
+    overflow: hidden;
 }
 
 .container {
@@ -24,6 +25,7 @@ body {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    position: relative;
 }
 
 .header {
@@ -257,12 +259,18 @@ body {
 @media (max-width: 768px) {
     body {
         padding: 0;
+        overflow: hidden;
     }
 
     .container {
         height: 100vh;
-        max-height: 100vh;  /* ← DODAJ */
+        max-height: 100vh;
         border-radius: 0;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
     }
 
     .message-content {
