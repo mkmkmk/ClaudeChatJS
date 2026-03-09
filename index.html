@@ -121,6 +121,46 @@ Always return object with 'data' and 'layout' properties.`;
             this.style.height = Math.min(this.scrollHeight, 120) + 'px';
         });
 
+
+        function updateMessage(messageId, content) {
+            const messageDiv = document.getElementById(messageId);
+            if (!messageDiv) return;
+
+            const contentDiv = messageDiv.querySelector('.message-content');
+            if (!contentDiv) return;
+
+            // Renderuj markdown + plotly + latex
+            // let processedContent = renderPlotlyCharts(content);
+            // const html = marked.parse(processedContent);
+            const html = marked.parse(content);
+            contentDiv.innerHTML = DOMPurify.sanitize(html);
+
+            // Renderuj LaTeX
+            if (typeof renderMathInElement !== 'undefined') {
+                renderMathInElement(contentDiv, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '\\$', right: '\\$', display: false},
+                        {left: '$', right: '$', display: false}
+                    ],
+                    throwOnError: false
+                });
+            }
+
+            // Highlight code
+            // contentDiv.querySelectorAll('pre code').forEach((block) => {
+            //     if (!block.textContent.includes('plotly-js'))
+            //         hljs.highlightElement(block);
+            // });
+            contentDiv.querySelectorAll('pre code:not(.language-plotly-js)').forEach((block) => {
+                hljs.highlightElement(block);
+            });
+
+            // Auto-scroll
+            const chat = document.getElementById('chat');
+            chat.scrollTop = chat.scrollHeight;
+        }
+
         async function sendMessage() {
             if (isProcessing) return;
             
@@ -146,7 +186,7 @@ Always return object with 'data' and 'layout' properties.`;
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('chat_password')}`  
+                        'Authorization': `Bearer ${localStorage.getItem('chat_password')}`
                     },
                     body: JSON.stringify({
                         model: 'claude-sonnet-4-20250514',
@@ -155,7 +195,7 @@ Always return object with 'data' and 'layout' properties.`;
                         messages: chatHistory
                     })
                 });
-                
+
                 if (response.status === 401) {
                     localStorage.removeItem('chat_password');
                     alert('Invalid password! Please refresh and try again.');
@@ -166,16 +206,69 @@ Always return object with 'data' and 'layout' properties.`;
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
 
-                const data = await response.json();
-                const assistantMessage = data.content[0].text;
-
-                // Remove loading and add real response
                 document.getElementById(loadingId).remove();
-                addMessage('assistant', assistantMessage);
+
+                // Streaming
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let assistantMessage = '';
+                let messageId = null;
+
+                while (true) {
+                    const {done, value} = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n');
+
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const data = line.slice(6);
+                            if (data === '[DONE]') continue;
+
+                            try {
+                                const parsed = JSON.parse(data);
+
+                                if (parsed.type === 'content_block_delta') {
+                                    const text = parsed.delta?.text || '';
+                                    assistantMessage += text;
+
+                                    // Aktualizuj wiadomość na żywo
+                                    if (!messageId) {
+                                        messageId = addMessage('assistant', assistantMessage);
+                                    } else {
+                                        updateMessage(messageId, assistantMessage);
+                                    }
+                                }
+                            } catch (e) {
+                                // console.log(e)
+                            }
+                        }
+                    }
+                }
+
                 chatHistory.push({ role: 'assistant', content: assistantMessage });
 
+                if (messageId && assistantMessage.includes('```plotly-js')) {
+                    const contentDiv = document.getElementById(messageId).querySelector('.message-content');
+                    renderPlotlyInDOM(contentDiv);
+                    if (typeof renderMathInElement !== 'undefined') {
+                        renderMathInElement(contentDiv, {
+                            delimiters: [
+                                {left: '$$', right: '$$', display: true},
+                                {left: '\\$', right: '\\$', display: false},
+                                {left: '$', right: '$', display: false}
+                            ],
+                            throwOnError: false
+                        });
+                    }
+                    contentDiv.querySelectorAll('pre code').forEach((block) => {
+                        hljs.highlightElement(block);
+                    });
+                }
+
             } catch (error) {
-                document.getElementById(loadingId).remove();
+                document.getElementById(loadingId)?.remove();
                 addMessage('assistant', '❌ Error: ' + error.message);
                 console.error('Error:', error);
             } finally {
@@ -183,44 +276,37 @@ Always return object with 'data' and 'layout' properties.`;
                 isProcessing = false;
                 input.focus();
             }
+
         }
 
-        function renderPlotlyCharts(content) {
-            const plotlyRegex = /```plotly-js\n([\s\S]*?)```/g;
-            let match;
-            let modifiedContent = content;
+        function renderPlotlyInDOM(contentDiv) {
+            const codeBlocks = contentDiv.querySelectorAll('pre code.language-plotly-js');
             
-            while ((match = plotlyRegex.exec(content)) !== null) {
+            codeBlocks.forEach(codeBlock => {
+                const code = codeBlock.textContent;
+                const preElement = codeBlock.parentElement;
+                const plotId = 'plot-' + Date.now() + Math.random();
+                const plotDiv = document.createElement('div');
+                plotDiv.id = plotId;
+                plotDiv.style.width = '100%';
+                plotDiv.style.height = '400px';
+                preElement.replaceWith(plotDiv);
+
                 try {
-                    const code = match[1];
-                    const plotId = 'plot-' + Date.now() + Math.random();
-                    const plotDiv = `<div id="${plotId}" style="width:100%;height:400px;"></div>`;
+                    let fixedCode = code
+                        .replace(/if\s*\([^)]+\)\s*{\s*;?\s*}/g, '')
+                        .replace(/,(\s*[}\]])/g, '$1');
                     
-                    modifiedContent = modifiedContent.replace(match[0], plotDiv);
+                    console.log('=== Plotly Code ===');
+                    console.log(fixedCode);
                     
-                    setTimeout(() => {
-                        console.log('=== Plotly Code ===');
-                        console.log(code);
-                        console.log('==================');
-                        const plotConfig = new Function(code)();
-                        Plotly.newPlot(plotId, plotConfig.data, plotConfig.layout || {});
-
-                        if(false)
-                        {
-                            console.log('=== Plot Config ===');
-                            console.log(plotConfig);
-                            console.log('==================');
-                        }
-                    }, 100);
-
-                } catch (e) {
-                    console.error('Plotly render error:', e);
-                    modifiedContent = modifiedContent.replace(match[0], 
-                        `<div style="color:red;">Error rendering plot: ${e.message}</div>`);
+                    const plotConfig = new Function(fixedCode)();
+                    Plotly.newPlot(plotId, plotConfig.data, plotConfig.layout || {});
+                } catch (err) {
+                    console.error('Plotly error:', err);
+                    plotDiv.innerHTML = `<div style="color:red;">Error: ${err.message}</div>`;
                 }
-            }
-            
-            return modifiedContent;
+            });
         }
 
         function addMessage(role, content, isLoading = false) {
@@ -238,8 +324,6 @@ Always return object with 'data' and 'layout' properties.`;
                 contentDiv.className += ' loading';
                 contentDiv.textContent = content;
             } else {
-                content = renderPlotlyCharts(content);
-                // Parse markdown and sanitize
                 const html = marked.parse(content);
                 contentDiv.innerHTML = DOMPurify.sanitize(html);
                 renderMathInElement(contentDiv, {
@@ -324,7 +408,7 @@ Always return object with 'data' and 'layout' properties.`;
                     });
 
                     console.log(`Imported ${chatHistory.length} messages from session: ${data.session_id}`);
-                    
+
                 } catch (error) {
                     alert('Error importing file: ' + error.message);
                     console.error('Import error:', error);
