@@ -219,13 +219,15 @@ Always return object with 'data' and 'layout' properties.`;
                 const decoder = new TextDecoder();
                 let assistantMessage = '';
                 let messageId = null;
+                let buffer = '';
 
                 while (true) {
                     const {done, value} = await reader.read();
                     if (done) break;
 
-                    const chunk = decoder.decode(value);
-                    const lines = chunk.split('\n');
+                    buffer += decoder.decode(value, {stream: true});
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop() || '';
 
                     for (const line of lines) {
                         if (line.startsWith('data: ')) {
@@ -239,7 +241,6 @@ Always return object with 'data' and 'layout' properties.`;
                                     const text = parsed.delta?.text || '';
                                     assistantMessage += text;
 
-                                    // Aktualizuj wiadomość na żywo
                                     if (!messageId) {
                                         messageId = addMessage('assistant', assistantMessage);
                                     } else {
@@ -247,7 +248,7 @@ Always return object with 'data' and 'layout' properties.`;
                                     }
                                 }
                             } catch (e) {
-                                // console.log(e)
+                                console.warn('SSE parse error:', e, 'Line:', line);
                             }
                         }
                     }
@@ -255,9 +256,11 @@ Always return object with 'data' and 'layout' properties.`;
 
                 chatHistory.push({ role: 'assistant', content: assistantMessage });
 
-                if (messageId && assistantMessage.includes('```plotly-js')) {
+                const plotlyBlocks = assistantMessage.match(/```plotly-js\n[\s\S]*?```/g);
+                if (plotlyBlocks && plotlyBlocks.length > 0) {
                     const contentDiv = document.getElementById(messageId).querySelector('.message-content');
                     renderPlotlyInDOM(contentDiv);
+
                     if (typeof renderMathInElement !== 'undefined') {
                         renderMathInElement(contentDiv, {
                             delimiters: [
@@ -268,7 +271,7 @@ Always return object with 'data' and 'layout' properties.`;
                             throwOnError: false
                         });
                     }
-                    contentDiv.querySelectorAll('pre code').forEach((block) => {
+                    contentDiv.querySelectorAll('pre code:not(.language-plotly-js)').forEach((block) => {
                         hljs.highlightElement(block);
                     });
                 }
@@ -299,9 +302,9 @@ Always return object with 'data' and 'layout' properties.`;
                 preElement.replaceWith(plotDiv);
 
                 try {
-                    let fixedCode = code
-                        .replace(/if\s*\([^)]+\)\s*{\s*;?\s*}/g, '')
-                        .replace(/,(\s*[}\]])/g, '$1');
+                    let fixedCode = code;
+                        // .replace(/if\s*\([^)]+\)\s*{\s*;?\s*}/g, '')
+                        // .replace(/,(\s*[}\]])/g, '$1');
                     
                     console.log('=== Plotly Code ===');
                     console.log(fixedCode);
