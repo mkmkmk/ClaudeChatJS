@@ -11,6 +11,8 @@
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -170,13 +172,6 @@ Always follow these rules:
                 // Parse markdown and sanitize
                 const html = marked.parse(content);
                 contentDiv.innerHTML = DOMPurify.sanitize(html);
-                /*
-                renderMathInElement(contentDiv, {
-                    delimiters: [
-                        {left: '$$', right: '$$', display: true},
-                        {left: '\\$', right: '\\$', display: false}
-                    ]
-                });*/
                 renderMathInElement(contentDiv, {
                     delimiters: [
                         {left: '$$', right: '$$', display: true},
@@ -184,6 +179,9 @@ Always follow these rules:
                         {left: '$', right: '$', display: false}       // bez slasha
                     ],
                     throwOnError: false
+                });
+                contentDiv.querySelectorAll('pre code').forEach((block) => {
+                    hljs.highlightElement(block);
                 });                
             }
 
