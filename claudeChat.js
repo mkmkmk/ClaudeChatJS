@@ -1,3 +1,4 @@
+
 const PASSWORD = localStorage.getItem('chat_password');
 if (!PASSWORD) {
     const pwd = prompt('Enter password to access chat:');
@@ -8,6 +9,8 @@ if (!PASSWORD) {
     localStorage.setItem('chat_password', pwd);
     location.reload();
 }
+
+const WELCOME_MSG = 'Cześć! Jestem Claude. W czym mogę pomóc?';
 
 function logout() {
     if (confirm('Logout and clear password?')) {
@@ -262,6 +265,7 @@ function clearChat() {
     if (confirm('Clear entire conversation?')) {
         document.getElementById('chat').innerHTML = '';
         chatHistory.length = 0;
+        addMessage('assistant', WELCOME_MSG);
     }
 }
 
@@ -347,7 +351,7 @@ input.focus();
 
 // Welcome message
 setTimeout(() => {
-    addMessage('assistant', 'Cześć! Jestem Claude. W czym mogę pomóc?');
+    addMessage('assistant', WELCOME_MSG);
     if (false)
         console.log(SYSTEM_PROMPT);
 }, 500);
