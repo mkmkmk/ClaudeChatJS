@@ -346,7 +346,7 @@ function renderJSInDOM(contentDiv) {
             // Zwijany blok kodu
             const details = document.createElement('details');
             const summary = document.createElement('summary');
-            summary.textContent = '📄 Show code';
+            summary.textContent = '📄 code';
             summary.style.cursor = 'pointer';
             summary.style.color = '#888';
             summary.style.fontSize = '0.9em';
@@ -365,7 +365,7 @@ function renderJSInDOM(contentDiv) {
             resultDiv.style.fontFamily = 'monospace';
             resultDiv.style.whiteSpace = 'pre-wrap';
             resultDiv.style.marginTop = '10px';
-            resultDiv.innerHTML = '<strong>Output:</strong>\n' + resultText;
+            resultDiv.innerHTML = resultText;
 
             details.after(resultDiv);
 
