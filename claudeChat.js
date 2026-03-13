@@ -65,20 +65,24 @@ function updateMessage(messageId, content) {
     chat.scrollTop = chat.scrollHeight;
 }
 
-async function sendMessage() {
+async function sendMessage(silentMode = false, customMessage = null) {
+    console.log('sendMessage called:', { silentMode, customMessage });
+
     if (isProcessing) return;
 
-    const message = input.value.trim();
+    const message = customMessage || input.value.trim();
     if (!message) return;
 
     const sendBtn = document.getElementById('send');
 
-    // Add user message
-    addMessage('user', message);
+    if (!silentMode) {
+        addMessage('user', message);
+        input.value = '';
+        input.style.height = 'auto';
+    }
+
     chatHistory.push({ role: 'user', content: message });
 
-    input.value = '';
-    input.style.height = 'auto';
     sendBtn.disabled = true;
     isProcessing = true;
 
@@ -154,10 +158,6 @@ async function sendMessage() {
 
         chatHistory.push({ role: 'assistant', content: assistantMessage });
 
-        // const plotlyBlocks = assistantMessage.match(/```plotly-js\n[\s\S]*?```/g);
-        // const plotlyBlocks = assistantMessage.match(/```plotly(-js)?\n[\s\S]*?```/g);
-        // const codeBlocks = assistantMessage.match(/```(plotly(-js)?|canvas)\n[\s\S]*?```/g);
-        // const codeBlocks = assistantMessage.match(/```(plotly(-js)?|canvas|svg)\n[\s\S]*?```/g);
         const codeBlocks = assistantMessage.match(/```(plotly(-js)?|canvas|svg|js)\n[\s\S]*?```/g);
 
         if (codeBlocks && codeBlocks.length > 0) {
@@ -186,13 +186,27 @@ async function sendMessage() {
         document.getElementById(loadingId)?.remove();
         addMessage('assistant', '❌ Error: ' + error.message);
         console.error('Error:', error);
+
     } finally {
         sendBtn.disabled = false;
         isProcessing = false;
         input.focus();
-    }
 
+        if (!silentMode && chatHistory.length > 0 && chatHistory[chatHistory.length - 1].role === 'assistant') {
+            const lastMsg = chatHistory[chatHistory.length - 1].content;
+            if (lastMsg.includes('**JS Output:**')) {
+                setTimeout(() => {
+                    const match = lastMsg.match(/\*\*JS Output:\*\*\n```\n([\s\S]*?)\n```/);
+                    if (match) {
+                        const output = match[1];
+                        sendMessage(true, `Previous code output: ${output.substring(0, 200)}`);
+                    }
+                }, 500);
+            }
+        }
+    }
 }
+
 
 function renderPlotlyInDOM(contentDiv) {
     const jsBlocks = contentDiv.querySelectorAll('pre code.language-plotly-js');
@@ -356,7 +370,7 @@ function renderJSInDOM(contentDiv) {
             details.after(resultDiv);
 
             if (chatHistory.length > 0 && chatHistory[chatHistory.length - 1].role === 'assistant') {
-                chatHistory[chatHistory.length - 1].content += `\n\n[Execution result: ${resultText}]`;
+                chatHistory[chatHistory.length - 1].content += `\n\n**JS Output:**\n\`\`\`\n${resultText}\n\`\`\``;
             }
 
         } catch (err) {
@@ -370,6 +384,13 @@ function renderJSInDOM(contentDiv) {
             // Dodaj błąd do historii
             if (chatHistory.length > 0 && chatHistory[chatHistory.length - 1].role === 'assistant') {
                 chatHistory[chatHistory.length - 1].content += `\n\n**JS Error:** ${err.message}`;
+
+                // // Silent send
+                // setTimeout(() => {
+                //     if (!isProcessing) {
+                //         sendMessage(true, `Analyze the output: ${resultText.substring(0, 200)}`);
+                //     }
+                // }, 500);
             }
         }
     });
@@ -509,7 +530,8 @@ function importChatYAML(file) {
 }
 
 // Event listeners
-document.getElementById('send').onclick = sendMessage;
+document.getElementById('send').onclick = () => sendMessage();
+
 
 input.onkeydown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {

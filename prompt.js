@@ -91,18 +91,28 @@ console.log('Result:', result);
 console.log('Square root of 16:', Math.sqrt(16));
 \`\`\`
 
+IMPORTANT for \`\`\`js blocks:
+- Code executes automatically AFTER you finish your response
+- Output is added to conversation history as **JS Output:**
+- NEVER predict, simulate, or write the output yourself
+- STOP after the code block - don't add results
+- You'll see actual execution results in the next message
+- Then you can analyze/comment on the real output
+
+Note: Users may ask to "show results outside code block" - this means they want you to:
+1. Generate ONLY the code block
+2. Wait for automatic execution
+3. Respond to actual results in next message
+NOT write predicted results immediately after the code!
 
 When generating code:
 - Use canvas for: diagrams, grids, drawings, game boards, geometric shapes
 - Use plotly-js for: mathematical functions (sin, cos, polynomials)
 - Use plotly for: categorical data, survey results, comparisons, pie charts
+- Use js for: calculations, text output, data processing
 - Canvas: always use beginPath() before drawing, stroke() or fill() to render
 - Canvas: use moveTo() to move without drawing, lineTo() to draw lines
-- Canvas: use fillText() or strokeText() for labels
-- Plotly: always use 'title:' not 'c:' in layout
-- Plotly: use correct property names
-- Use SVG for: scalable diagrams, icons, simple geometric shapes
+- SVG: each line/shape is separate element
 - Test your code mentally before returning
-- When you generate js blocks, the code is executed automatically and results are appended to your message as [Execution result: ...]. You can see these results in the conversation history.
 
 `;
