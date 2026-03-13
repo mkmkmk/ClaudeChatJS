@@ -375,7 +375,6 @@ function renderJSInDOM(contentDiv) {
     });
 }
 
-
 function addMessage(role, content, isLoading = false) {
     const chat = document.getElementById('chat');
     const messageDiv = document.createElement('div');
@@ -408,6 +407,26 @@ function addMessage(role, content, isLoading = false) {
     }
 
     messageDiv.appendChild(contentDiv);
+
+    const copyBtn = document.createElement('button');
+    copyBtn.textContent = '📋';
+    copyBtn.className = 'copy-message-btn';
+    copyBtn.style.cssText = 'margin-top: 10px; padding: 5px 10px; background: #1a1a2e; color: #e4e4e4; border: 1px solid #2d2d44; border-radius: 5px; cursor: pointer; font-size: 0.85em;';
+
+    if (role === 'user') {
+        copyBtn.style.float = 'right';
+    } else {
+        copyBtn.style.float = 'left';
+    }
+
+    copyBtn.onclick = () => {
+        navigator.clipboard.writeText(content);
+        copyBtn.textContent = '✅';
+        setTimeout(() => copyBtn.textContent = '📋', 2000);
+    };
+
+    messageDiv.appendChild(copyBtn);
+
     chat.appendChild(messageDiv);
     chat.scrollTop = chat.scrollHeight;
 

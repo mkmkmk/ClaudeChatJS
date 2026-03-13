@@ -74,6 +74,7 @@ body {
     border-radius: 18px;
     max-width: 80%;
     word-wrap: break-word;
+    line-height: 1.6;
 }
 
 .user .message-content {
@@ -254,6 +255,11 @@ body {
 
 .katex .mord {
     color: #e4e4e4;
+}
+
+.copy-message-btn:hover {
+    background: #16213e !important;
+    border-color: #e94560 !important;
 }
 
 @media (max-width: 768px) {
