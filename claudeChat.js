@@ -11,6 +11,7 @@ if (!PASSWORD) {
 }
 
 const WELCOME_MSG = 'Cześć! Jestem Claude. W czym mogę pomóc?';
+const NO_HIGHLIGHT = 'pre code:not(.language-plotly-js):not(.language-plotly):not(.language-canvas):not(.language-svg)';
 
 function logout() {
     if (confirm('Logout and clear password?')) {
@@ -26,7 +27,7 @@ let isProcessing = false;
 
 // Auto-resize textarea
 const input = document.getElementById('input');
-input.addEventListener('input', function() {
+input.addEventListener('input', function () {
     this.style.height = 'auto';
     this.style.height = Math.min(this.scrollHeight, 120) + 'px';
 });
@@ -46,21 +47,16 @@ function updateMessage(messageId, content) {
     if (typeof renderMathInElement !== 'undefined') {
         renderMathInElement(contentDiv, {
             delimiters: [
-                {left: '$$', right: '$$', display: true},
-                {left: '\\$', right: '\\$', display: false},
-                {left: '$', right: '$', display: false}
+                { left: '$$', right: '$$', display: true },
+                { left: '\\$', right: '\\$', display: false },
+                { left: '$', right: '$', display: false }
             ],
             throwOnError: false,
             strict: false
         });
     }
 
-    // Highlight code
-    // contentDiv.querySelectorAll('pre code').forEach((block) => {
-    //     if (!block.textContent.includes('plotly-js'))
-    //         hljs.highlightElement(block);
-    // });
-    contentDiv.querySelectorAll('pre code:not(.language-plotly-js)').forEach((block) => {
+    contentDiv.querySelectorAll(NO_HIGHLIGHT).forEach((block) => {
         hljs.highlightElement(block);
     });
 
@@ -71,16 +67,16 @@ function updateMessage(messageId, content) {
 
 async function sendMessage() {
     if (isProcessing) return;
-    
+
     const message = input.value.trim();
     if (!message) return;
 
     const sendBtn = document.getElementById('send');
-    
+
     // Add user message
     addMessage('user', message);
     chatHistory.push({ role: 'user', content: message });
-    
+
     input.value = '';
     input.style.height = 'auto';
     sendBtn.disabled = true;
@@ -124,10 +120,10 @@ async function sendMessage() {
         let buffer = '';
 
         while (true) {
-            const {done, value} = await reader.read();
+            const { done, value } = await reader.read();
             if (done) break;
 
-            buffer += decoder.decode(value, {stream: true});
+            buffer += decoder.decode(value, { stream: true });
             const lines = buffer.split('\n');
             buffer = lines.pop() || '';
 
@@ -158,17 +154,25 @@ async function sendMessage() {
 
         chatHistory.push({ role: 'assistant', content: assistantMessage });
 
-        const plotlyBlocks = assistantMessage.match(/```plotly-js\n[\s\S]*?```/g);
-        if (plotlyBlocks && plotlyBlocks.length > 0) {
+        // const plotlyBlocks = assistantMessage.match(/```plotly-js\n[\s\S]*?```/g);
+        // const plotlyBlocks = assistantMessage.match(/```plotly(-js)?\n[\s\S]*?```/g);
+        // const codeBlocks = assistantMessage.match(/```(plotly(-js)?|canvas)\n[\s\S]*?```/g);
+        // const codeBlocks = assistantMessage.match(/```(plotly(-js)?|canvas|svg)\n[\s\S]*?```/g);
+        const codeBlocks = assistantMessage.match(/```(plotly(-js)?|canvas|svg|js)\n[\s\S]*?```/g);
+
+        if (codeBlocks && codeBlocks.length > 0) {
             const contentDiv = document.getElementById(messageId).querySelector('.message-content');
             renderPlotlyInDOM(contentDiv);
+            renderCanvasInDOM(contentDiv);
+            renderSVGInDOM(contentDiv);
+            renderJSInDOM(contentDiv);
 
             if (typeof renderMathInElement !== 'undefined') {
                 renderMathInElement(contentDiv, {
                     delimiters: [
-                        {left: '$$', right: '$$', display: true},
-                        {left: '\\$', right: '\\$', display: false},
-                        {left: '$', right: '$', display: false}
+                        { left: '$$', right: '$$', display: true },
+                        { left: '\\$', right: '\\$', display: false },
+                        { left: '$', right: '$', display: false }
                     ],
                     throwOnError: false
                 });
@@ -191,9 +195,9 @@ async function sendMessage() {
 }
 
 function renderPlotlyInDOM(contentDiv) {
-    const codeBlocks = contentDiv.querySelectorAll('pre code.language-plotly-js');
-    
-    codeBlocks.forEach(codeBlock => {
+    const jsBlocks = contentDiv.querySelectorAll('pre code.language-plotly-js');
+
+    jsBlocks.forEach(codeBlock => {
         const code = codeBlock.textContent;
         const preElement = codeBlock.parentElement;
         const plotId = 'plot-' + Date.now() + Math.random();
@@ -204,25 +208,161 @@ function renderPlotlyInDOM(contentDiv) {
         preElement.replaceWith(plotDiv);
 
         try {
-            let fixedCode = code;
-                // .replace(/if\s*\([^)]+\)\s*{\s*;?\s*}/g, '')
-                // .replace(/,(\s*[}\]])/g, '$1');
-            
             console.log('=== Plotly Code ===');
-            console.log(fixedCode);
-            
-            const plotConfig = new Function(fixedCode)();
+            console.log(code);
+            const plotConfig = new Function(code)();
             Plotly.newPlot(plotId, plotConfig.data, plotConfig.layout || {}, {
-                    displayModeBar: false,
-                    staticPlot: true
-                });
+                displayModeBar: false,
+                staticPlot: true
+            });
 
         } catch (err) {
             console.error('Plotly error:', err);
             plotDiv.innerHTML = `<div style="color:red;">Error: ${err.message}</div>`;
         }
     });
+
+    const jsonBlocks = contentDiv.querySelectorAll('pre code.language-plotly');
+    jsonBlocks.forEach(codeBlock => {
+        const code = codeBlock.textContent;
+        const preElement = codeBlock.parentElement;
+        const plotId = 'plot-' + Date.now() + Math.random();
+        const plotDiv = document.createElement('div');
+        plotDiv.id = plotId;
+        plotDiv.style.width = '100%';
+        plotDiv.style.height = '400px';
+        preElement.replaceWith(plotDiv);
+
+        try {
+            console.log('=== Plotly JSON ===');
+            console.log(code);
+            const plotConfig = JSON.parse(code);
+            Plotly.newPlot(plotId, plotConfig.data, plotConfig.layout || {}, {
+                displayModeBar: false,
+                staticPlot: true
+            });
+        } catch (err) {
+            console.error('Plotly JSON error:', err);
+            plotDiv.innerHTML = `<div style="color:red;">Error: ${err.message}</div>`;
+        }
+    });
+
 }
+
+function renderCanvasInDOM(contentDiv) {
+    const canvasBlocks = contentDiv.querySelectorAll('pre code.language-canvas');
+
+    canvasBlocks.forEach(codeBlock => {
+        const code = codeBlock.textContent;
+        const preElement = codeBlock.parentElement;
+
+        const canvasId = 'canvas-' + Date.now() + Math.random();
+        const canvas = document.createElement('canvas');
+        canvas.id = canvasId;
+        canvas.width = 400;
+        canvas.height = 400;
+        canvas.style.border = '1px solid #666';
+        canvas.style.background = '#fff';
+
+        preElement.replaceWith(canvas);
+
+        try {
+            console.log('=== Canvas Code ===');
+            console.log(code);
+
+            const ctx = canvas.getContext('2d');
+            // new Function('canvas', 'ctx', code)(canvas, ctx);
+            new Function('ctx', code)(ctx);
+
+        } catch (err) {
+            console.error('Canvas error:', err);
+            canvas.outerHTML = `<div style="color:red;">Canvas Error: ${err.message}</div>`;
+        }
+    });
+}
+
+function renderSVGInDOM(contentDiv) {
+    const svgBlocks = contentDiv.querySelectorAll('pre code.language-svg');
+
+    svgBlocks.forEach(codeBlock => {
+        const code = codeBlock.textContent.trim();
+        const preElement = codeBlock.parentElement;
+
+        try {
+            console.log('=== SVG Code ===');
+            console.log(code);
+
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = code;
+            wrapper.style.textAlign = 'center';
+            wrapper.style.margin = '10px 0';
+
+            preElement.replaceWith(wrapper);
+
+        } catch (err) {
+            console.error('SVG error:', err);
+            preElement.outerHTML = `<div style="color:red;">SVG Error: ${err.message}</div>`;
+        }
+    });
+}
+
+function renderJSInDOM(contentDiv) {
+    const jsBlocks = contentDiv.querySelectorAll('pre code.language-js');
+
+    jsBlocks.forEach(codeBlock => {
+        const code = codeBlock.textContent.trim();
+        const preElement = codeBlock.parentElement;
+
+        try {
+            console.log('=== JS Code ===');
+            console.log(code);
+
+            let output = '';
+            const originalLog = console.log;
+            console.log = (...args) => {
+                output += args.join(' ') + '\n';
+                originalLog(...args);
+            };
+
+            const result = new Function(code)();
+            console.log = originalLog;
+
+            const resultText = output || (result !== undefined ? String(result) : '(no output)');
+
+            // Pokaż wynik
+            const resultDiv = document.createElement('div');
+            resultDiv.style.background = '#1a1a2e';
+            resultDiv.style.color = '#0f0';
+            resultDiv.style.padding = '15px';
+            resultDiv.style.borderRadius = '8px';
+            resultDiv.style.fontFamily = 'monospace';
+            resultDiv.style.whiteSpace = 'pre-wrap';
+            resultDiv.style.marginTop = '10px';
+            resultDiv.innerHTML = '<strong>Output:</strong>\n' + resultText;
+
+            preElement.after(resultDiv);
+
+            // DODAJ DO HISTORII
+            if (chatHistory.length > 0 && chatHistory[chatHistory.length - 1].role === 'assistant') {
+                chatHistory[chatHistory.length - 1].content += `\n\n[Execution result: ${resultText}]`;
+            }
+
+        } catch (err) {
+            console.error('JS error:', err);
+            const errorDiv = document.createElement('div');
+            errorDiv.style.color = 'red';
+            errorDiv.style.marginTop = '10px';
+            errorDiv.textContent = 'Error: ' + err.message;
+            preElement.after(errorDiv);
+
+            // Dodaj błąd do historii
+            if (chatHistory.length > 0 && chatHistory[chatHistory.length - 1].role === 'assistant') {
+                chatHistory[chatHistory.length - 1].content += `\n\n**JS Error:** ${err.message}`;
+            }
+        }
+    });
+}
+
 
 function addMessage(role, content, isLoading = false) {
     const chat = document.getElementById('chat');
@@ -243,15 +383,16 @@ function addMessage(role, content, isLoading = false) {
         contentDiv.innerHTML = DOMPurify.sanitize(html);
         renderMathInElement(contentDiv, {
             delimiters: [
-                {left: '$$', right: '$$', display: true},
-                {left: '\\$', right: '\\$', display: false},  // ze slashem
-                {left: '$', right: '$', display: false}       // bez slasha
+                { left: '$$', right: '$$', display: true },
+                { left: '\\$', right: '\\$', display: false },  // ze slashem
+                { left: '$', right: '$', display: false }       // bez slasha
             ],
             throwOnError: false
         });
-        contentDiv.querySelectorAll('pre code').forEach((block) => {
+
+        contentDiv.querySelectorAll(NO_HIGHLIGHT).forEach((block) => {
             hljs.highlightElement(block);
-        });                
+        });
     }
 
     messageDiv.appendChild(contentDiv);
@@ -279,22 +420,22 @@ function exportChatYAML() {
         session_id: 'web-' + Date.now(),
         conversation: chatHistory
     };
-    
+
     const yaml = jsyaml.dump(data, {
         lineWidth: -1,
         noRefs: true,
         sortKeys: false
     });
-    
+
     const blob = new Blob([yaml], { type: 'text/yaml' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    
+
     const now = new Date();
-    const timestamp = now.toISOString().slice(0,16).replace('T','_').replace(':','_');
+    const timestamp = now.toISOString().slice(0, 16).replace('T', '_').replace(':', '_');
     a.download = `chat_history_${timestamp}.yaml`;
-    
+
     a.click();
     URL.revokeObjectURL(url);
 }
@@ -306,7 +447,7 @@ function importChatYAML(file) {
     reader.onload = (e) => {
         try {
             const data = jsyaml.load(e.target.result);
-            
+
             if (!data.conversation || !Array.isArray(data.conversation)) {
                 throw new Error('Invalid YAML format');
             }
@@ -314,7 +455,7 @@ function importChatYAML(file) {
             // Clear current chat
             chatHistory.length = 0;
             document.getElementById('chat').innerHTML = '';
-            
+
             // Load conversation
             data.conversation.forEach(msg => {
                 if (msg.role && msg.content) {
@@ -331,7 +472,7 @@ function importChatYAML(file) {
         }
     };
     reader.readAsText(file);
-    
+
     // Reset file input
     document.getElementById('fileInput').value = '';
 }
