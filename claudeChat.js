@@ -329,6 +329,19 @@ function renderJSInDOM(contentDiv) {
 
             const resultText = output || (result !== undefined ? String(result) : '(no output)');
 
+            // Zwijany blok kodu
+            const details = document.createElement('details');
+            const summary = document.createElement('summary');
+            summary.textContent = '📄 Show code';
+            summary.style.cursor = 'pointer';
+            summary.style.color = '#888';
+            summary.style.fontSize = '0.9em';
+            summary.style.marginBottom = '5px';
+
+            details.appendChild(summary);
+            details.appendChild(preElement.cloneNode(true));
+            preElement.replaceWith(details);
+
             // Pokaż wynik
             const resultDiv = document.createElement('div');
             resultDiv.style.background = '#1a1a2e';
@@ -340,9 +353,8 @@ function renderJSInDOM(contentDiv) {
             resultDiv.style.marginTop = '10px';
             resultDiv.innerHTML = '<strong>Output:</strong>\n' + resultText;
 
-            preElement.after(resultDiv);
+            details.after(resultDiv);
 
-            // DODAJ DO HISTORII
             if (chatHistory.length > 0 && chatHistory[chatHistory.length - 1].role === 'assistant') {
                 chatHistory[chatHistory.length - 1].content += `\n\n[Execution result: ${resultText}]`;
             }
