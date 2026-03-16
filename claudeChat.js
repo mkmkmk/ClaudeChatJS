@@ -220,7 +220,7 @@ function renderPlotlyInDOM(contentDiv) {
         const plotDiv = document.createElement('div');
         plotDiv.id = plotId;
         plotDiv.style.width = '100%';
-        plotDiv.style.height = '400px';
+        plotDiv.style.height = '380px';
         preElement.replaceWith(plotDiv);
 
         try {
@@ -246,7 +246,7 @@ function renderPlotlyInDOM(contentDiv) {
         const plotDiv = document.createElement('div');
         plotDiv.id = plotId;
         plotDiv.style.width = '100%';
-        plotDiv.style.height = '400px';
+        plotDiv.style.height = '380px';
         preElement.replaceWith(plotDiv);
 
         try {
@@ -275,8 +275,8 @@ function renderCanvasInDOM(contentDiv) {
         const canvasId = 'canvas-' + Date.now() + Math.random();
         const canvas = document.createElement('canvas');
         canvas.id = canvasId;
-        canvas.width = 400;
-        canvas.height = 400;
+        canvas.width = 380;
+        canvas.height = 380;
         canvas.style.border = '1px solid #666';
         canvas.style.background = '#fff';
 

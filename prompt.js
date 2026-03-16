@@ -40,16 +40,16 @@ GENERAL RULE for all drawing methods:
 
 1. Canvas (for diagrams, drawings, geometric shapes, game boards):
 \`\`\`canvas
-// Canvas is 400x400, ctx is provided (canvas accessible via ctx.canvas)
+// Canvas is 380x380, ctx is provided (canvas accessible via ctx.canvas)
 ctx.lineWidth = 2;
 ctx.strokeStyle = '#333';
 
 // Draw grid
 ctx.beginPath();
 ctx.moveTo(133, 0);
-ctx.lineTo(133, 400);
+ctx.lineTo(133, 380);
 ctx.moveTo(266, 0);
-ctx.lineTo(266, 400);
+ctx.lineTo(266, 380);
 ctx.stroke();
 \`\`\`
 
