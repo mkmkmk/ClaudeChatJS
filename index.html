@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pl">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,10 +12,13 @@
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/decimal.js"></script>
 </head>
+
 <body>
     <div class="container">
 
@@ -33,17 +37,14 @@
 
         <div class="input-area">
             <div class="input-container">
-                <textarea 
-                    id="input" 
-                    placeholder="Type your message... (Shift+Enter for new line)"
-                    rows="1"
-                ></textarea>
+                <textarea id="input" placeholder="Type your message... (Shift+Enter for new line)" rows="1"></textarea>
                 <button id="send">Send</button>
             </div>
             <div class="controls">
                 <button class="btn-secondary" onclick="clearChat()">🗑️ Clear</button>
                 <button class="btn-secondary" onclick="exportChatYAML()">💾 Export YAML</button>
-                <button class="btn-secondary" onclick="document.getElementById('fileInput').click()">📂 Import YAML</button>
+                <button class="btn-secondary" onclick="document.getElementById('fileInput').click()">📂 Import
+                    YAML</button>
                 <button class="btn-secondary" onclick="logout()">🔓 Logout</button>
             </div>
         </div>
@@ -52,7 +53,7 @@
     <input type="file" id="fileInput" accept=".yaml,.yml" style="display:none" onchange="importChatYAML(this.files[0])">
     <script src="prompt.js"></script>
     <script src="claudeChat.js"></script>
-  
-</body>
-</html>
 
+</body>
+
+</html>
