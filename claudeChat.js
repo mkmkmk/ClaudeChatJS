@@ -24,6 +24,7 @@ const WORKER_URL = 'https://ant1.mariusz-krej.workers.dev';
 
 const chatHistory = [];
 let isProcessing = false;
+let lastCodeOutput = null;
 
 // Auto-resize textarea
 const input = document.getElementById('input');
@@ -192,18 +193,19 @@ async function sendMessage(silentMode = false, customMessage = null) {
         isProcessing = false;
         input.focus();
 
-        if (!silentMode && chatHistory.length > 0 && chatHistory[chatHistory.length - 1].role === 'assistant') {
-            const lastMsg = chatHistory[chatHistory.length - 1].content;
-            if (lastMsg.includes('**JS Output:**')) {
+        if (/*!silentMode &&*/ chatHistory.length > 0 && chatHistory[chatHistory.length - 1].role === 'assistant') {
+            // const lastMsg = chatHistory[chatHistory.length - 1];
+            if (lastCodeOutput !== null) {
                 setTimeout(() => {
-                    const match = lastMsg.match(/\*\*JS Output:\*\*\n```\n([\s\S]*?)\n```/);
-                    if (match) {
-                        const output = match[1];
-                        sendMessage(true, `Previous code output: ${output.substring(0, 200)}`);
-                    }
+                    const output = lastCodeOutput.length > 1000
+                        ? lastCodeOutput.substring(0, 1000) + '\n... (truncated)'
+                        : lastCodeOutput;
+                    lastCodeOutput = null;
+                    sendMessage(true, '[Auto-reply]\n' + output + "\n[Auto-reply end, avoid auto reply loops!]\n");
                 }, 500);
             }
         }
+
     }
 }
 
@@ -370,7 +372,9 @@ function renderJSInDOM(contentDiv) {
             details.after(resultDiv);
 
             if (chatHistory.length > 0 && chatHistory[chatHistory.length - 1].role === 'assistant') {
-                chatHistory[chatHistory.length - 1].content += `\n\n**JS Output:**\n\`\`\`\n${resultText}\n\`\`\``;
+                output = `\n\n**JS Output:**\n\`\`\`\n${resultText}\n\`\`\``;
+                chatHistory[chatHistory.length - 1].content += output;
+                lastCodeOutput = output;
             }
 
         } catch (err) {
@@ -384,13 +388,6 @@ function renderJSInDOM(contentDiv) {
             // Dodaj błąd do historii
             if (chatHistory.length > 0 && chatHistory[chatHistory.length - 1].role === 'assistant') {
                 chatHistory[chatHistory.length - 1].content += `\n\n**JS Error:** ${err.message}`;
-
-                // // Silent send
-                // setTimeout(() => {
-                //     if (!isProcessing) {
-                //         sendMessage(true, `Analyze the output: ${resultText.substring(0, 200)}`);
-                //     }
-                // }, 500);
             }
         }
     });
