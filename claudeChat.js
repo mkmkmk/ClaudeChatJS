@@ -1,3 +1,8 @@
+const MODEL_ID = "claude-sonnet-4-5-20250929"
+const WELCOME_MSG = 'Cześć! Jestem Claude. W czym mogę pomóc?';
+const WORKER_URL = 'https://ant1.mariusz-krej.workers.dev';
+const NO_HIGHLIGHT = 'pre code:not(.language-plotly-js):not(.language-plotly):not(.language-canvas):not(.language-svg)';
+
 
 const PASSWORD = localStorage.getItem('chat_password');
 if (!PASSWORD) {
@@ -10,8 +15,6 @@ if (!PASSWORD) {
     location.reload();
 }
 
-const WELCOME_MSG = 'Cześć! Jestem Claude. W czym mogę pomóc?';
-const NO_HIGHLIGHT = 'pre code:not(.language-plotly-js):not(.language-plotly):not(.language-canvas):not(.language-svg)';
 
 function logout() {
     if (confirm('Logout and clear password?')) {
@@ -20,7 +23,6 @@ function logout() {
     }
 }
 
-const WORKER_URL = 'https://ant1.mariusz-krej.workers.dev';
 
 const chatHistory = [];
 let isProcessing = false;
@@ -98,7 +100,7 @@ async function sendMessage(silentMode = false, customMessage = null) {
                 'Authorization': `Bearer ${localStorage.getItem('chat_password')}`
             },
             body: JSON.stringify({
-                model: 'claude-sonnet-4-20250514',
+                model: MODEL_ID,
                 max_tokens: 4000,
                 system: SYSTEM_PROMPT,
                 messages: chatHistory
