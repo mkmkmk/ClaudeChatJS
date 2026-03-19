@@ -3,6 +3,8 @@ const WELCOME_MSG = 'Cześć! Jestem Claude. W czym mogę pomóc?';
 const WORKER_URL = 'https://ant1.mariusz-krej.workers.dev';
 const NO_HIGHLIGHT = 'pre code:not(.language-plotly-js):not(.language-plotly):not(.language-canvas):not(.language-svg)';
 
+// const emojis = ["🙂", "😀", "😄", "😊", "😂", "🤣", "😅",  "😢", "😙", "😘", "😜", "😟", "🙁", "🤔", "🤨", "👍", "👎",  "🚀", "🎯", "🎉", "🌶️", '✨', "✅", "❌", "⚠️", "💡"];
+const emojis = ['👍', '👎', "👏", "🙏", '😊', '😂', "😮", '🤔', "😱", '👏', '🎉', '🔥', "🎯", '✨', '💡', '🚀'];
 
 const PASSWORD = localStorage.getItem('chat_password');
 if (!PASSWORD) {
@@ -528,6 +530,30 @@ function importChatYAML(file) {
     document.getElementById('fileInput').value = '';
 }
 
+function initEmojiBar() {
+
+    const emojiBar = document.getElementById('emojiBar');
+    emojis.forEach(emoji => {
+        const btn = document.createElement('button');
+        btn.className = 'emoji-btn';
+        btn.textContent = emoji;
+        btn.onclick = () => insertEmoji(emoji);
+        emojiBar.appendChild(btn);
+    });
+}
+
+function insertEmoji(emoji) {
+    const textarea = document.getElementById('input');
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = textarea.value;
+    emoji = " " + emoji + " "
+    textarea.value = text.substring(0, start) + emoji + text.substring(end);
+    const newPos = start + emoji.length;
+    textarea.setSelectionRange(newPos, newPos);
+    textarea.focus();
+}
+
 // Event listeners
 document.getElementById('send').onclick = () => sendMessage();
 
@@ -538,6 +564,8 @@ input.onkeydown = (e) => {
         sendMessage();
     }
 };
+
+document.addEventListener('DOMContentLoaded', initEmojiBar);
 
 // Focus input on load
 input.focus();
