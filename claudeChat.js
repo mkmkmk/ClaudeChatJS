@@ -486,7 +486,7 @@ function exportChatYAML() {
     a.href = url;
 
     const now = new Date();
-    const timestamp = now.toISOString().slice(0, 16).replace('T', '_').replace(':', '_');
+    const timestamp = now.toISOString().slice(0, 16).replace(/[-:T]/g, '_');
     a.download = `chat_history_${timestamp}.yaml`;
 
     a.click();
