@@ -71,7 +71,7 @@ function updateMessage(messageId, content) {
 }
 
 async function sendMessage(silentMode = false, customMessage = null) {
-    console.log('sendMessage called:', { silentMode, customMessage });
+    // console.log('sendMessage called:', { silentMode, customMessage });
 
     if (isProcessing) return;
 
