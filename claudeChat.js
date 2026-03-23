@@ -163,7 +163,7 @@ async function sendMessage(silentMode = false, customMessage = null) {
 
         chatHistory.push({ role: 'assistant', content: assistantMessage });
 
-        const codeBlocks = assistantMessage.match(/```(plotly(-js)?|canvas|svg|js)\n[\s\S]*?```/g);
+        const codeBlocks = assistantMessage.match(/```(plotly(-js)?|canvas|svg|js|calc-js)\n[\s\S]*?```/g);
 
         if (codeBlocks && codeBlocks.length > 0) {
             const contentDiv = document.getElementById(messageId).querySelector('.message-content');
@@ -327,7 +327,7 @@ function renderSVGInDOM(contentDiv) {
 }
 
 function renderJSInDOM(contentDiv) {
-    const jsBlocks = contentDiv.querySelectorAll('pre code.language-js');
+    const jsBlocks = contentDiv.querySelectorAll('pre code.language-calc-js');
 
     jsBlocks.forEach(codeBlock => {
         const code = codeBlock.textContent.trim();

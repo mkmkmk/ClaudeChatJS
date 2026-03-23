@@ -78,7 +78,7 @@ return {
 \`\`\`
 
 5. JavaScript (for calculations and text output):
-\`\`\`js
+\`\`\`calc-js
 const result = 2 + 2;
 console.log('Result:', result);
 console.log('Square root of 16:', Math.sqrt(16));
