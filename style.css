@@ -173,6 +173,7 @@ body {
     transition: border-color 0.3s;
     background: #16213e;
     color: #e4e4e4;
+    overflow: hidden;
 }
 
 #input:focus {
