@@ -1,4 +1,6 @@
-const MODEL_ID = "claude-sonnet-4-5-20250929"
+// const MODEL_ID = "claude-sonnet-4-5-20250929"
+const MODEL_ID = "claude-sonnet-5"
+
 const WELCOME_MSG = 'Cześć! Jestem Claude. W czym mogę pomóc?';
 const WORKER_URL = 'https://ant1.mariusz-krej.workers.dev';
 const NO_HIGHLIGHT = 'pre code:not(.language-plotly-js):not(.language-plotly):not(.language-canvas):not(.language-svg)';
